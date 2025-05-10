@@ -1,4 +1,4 @@
-# Project Title: GreenSync – AI-Optimized Smart Hydroponic System
+# Project Title: GreenSync: AI-Optimized Smart Hydroponic System
 
 GreenSync is a cross-platform mobile and web application for managing a smart hydroponic system, built with React Native and Expo. It provides AI-driven growth insights, real-time sensor monitoring, and intuitive slot management for hydroponic setups.
 
