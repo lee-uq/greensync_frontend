@@ -18,7 +18,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { UserContext } from '../UserContext';
 
 const NAV_ITEMS = [
-  { label: 'Home', route: 'Home' },
+  { label: 'Home', route: 'DashboardMain' },
   { label: 'Search', route: 'Search' },
   { label: 'Insights', route: 'Insights' },
   { label: 'Profile', route: 'Profile' },

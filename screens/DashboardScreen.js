@@ -48,6 +48,37 @@ export default function DashboardScreen({ route, navigation }) {
             <View key={slot.id} style={[styles.slot, isWeb && styles.webSlot]}>
             {/* Display slot identifier */}
             <Text style={styles.slotTitle}>Slot #{slot.id}</Text>
+            {/* Health status card inserted here */}
+            {slot.hasPlant && (
+              <View style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: "#f8f8f8",
+                borderRadius: 12,
+                paddingVertical: 10,
+                paddingHorizontal: 16,
+                minHeight: 36,
+                width: '100%',
+                alignSelf: 'stretch',
+                marginBottom: 8,
+              }}>
+                {slot.data.ph >= 5.5 && slot.data.ph <= 6.0 ? (
+                  <>
+                    <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={{ marginRight: 10 }} />
+                    <Text style={{ color: "#222", fontWeight: 'bold', fontSize: 16 }}>
+                      Lettuce looks healthy!
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Ionicons name="warning" size={22} color="#e53935" style={{ marginRight: 10 }} />
+                    <Text style={{ color: "#b71c1c", fontWeight: 'bold', fontSize: 16 }}>
+                      Lettuce might need attention!
+                    </Text>
+                  </>
+                )}
+              </View>
+            )}
             {/* If a plant exists in this slot, show image and metrics */}
             {slot.hasPlant ? (
               <>

@@ -9,7 +9,7 @@
  */
 
 // Core React imports
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 
 // React Native UI primitives and utilities
@@ -102,12 +102,352 @@ const generateWaterChartData = () => {
   return { labels, data };
 };
 
-// Generate weekly growth progression over 4 weeks (cm)
-const generateGrowthChartData = () => {
-  const labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-  const data = [5, 10, 15, 20]; // cm values
-  return { labels, data };
-};
+// Mock AI Lettuce Health Status
+function mockGetLettuceHealthStatus() {
+  // Hardcode for now ("healthy" or "unhealthy"); swap for random for demo.
+  // return Math.random() > 0.2 ? "healthy" : "unhealthy";
+  return "healthy";
+}
+
+// ── AverageGrowthCard Component ──
+function AverageGrowthCard({ currentStage = 2 }) {
+  // Full names and abbreviations for stages
+  const stages = [
+    {
+      label: Platform.OS === 'web' ? 'Germination' : 'Germination',
+      abbrev: 'Germ.',
+      days: '5–10',
+      desc: 'Seeds sprout and roots emerge.',
+    },
+    {
+      label: Platform.OS === 'web' ? 'Seedling' : 'Seedling',
+      abbrev: 'Seedl.',
+      days: '10–14',
+      desc: 'Young leaves develop, rapid root growth.',
+    },
+    {
+      label: Platform.OS === 'web' ? 'Vegetative' : 'Vegetative',
+      abbrev: 'Veg.',
+      days: '25–50',
+      desc: 'Leaves expand, plant grows quickly.',
+    },
+    {
+      label: Platform.OS === 'web' ? 'Maturation' : 'Maturation',
+      abbrev: 'Matur.',
+      days: '10–40',
+      desc: 'Heads form and mature for harvest.',
+    },
+  ];
+  // Determine current stage label for summary
+  const stageLabel = Platform.OS === 'web'
+    ? stages[currentStage]?.label
+    : stages[currentStage]?.label;
+  if (Platform.OS === 'web') {
+    // Web: horizontal timeline with numbered stage circles
+    return (
+      <View style={styles.blockCard}>
+        <Text style={styles.modalTitle}>Average Growth</Text>
+        {/* Timeline with numbered circles */}
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginVertical: 24,
+            width: '98%',
+            alignSelf: 'center',
+            minHeight: 120,
+            position: 'relative'
+          }}
+        >
+          {/* Timeline line (behind circles) */}
+          <View
+            style={{
+              position: 'absolute',
+              left: '7%',
+              right: '7%',
+              top: 30,
+              height: 0,
+              borderTopWidth: 3,
+              borderTopColor: '#c8c8c8',
+              zIndex: 0,
+            }}
+          />
+          {stages.map((stage, idx, arr) => {
+            // Stage status
+            const isCompleted = idx < currentStage;
+            const isCurrent = idx === currentStage;
+            const isUpcoming = idx > currentStage;
+            // Colors
+            const circleBg =
+              isCompleted || isCurrent ? '#4CAF50' : '#DFDFDF';
+            const leafColor =
+              isCompleted || isCurrent ? '#fff' : '#A0A0A0';
+            const labelColor =
+              isCompleted || isCurrent ? '#108b49' : '#888';
+            const labelWeight =
+              isCurrent ? 'bold' : 'normal';
+            return (
+              <View key={stage.label} style={{ flex: 1, alignItems: 'center', position: 'relative' }}>
+                {/* Stage number above the circle */}
+                <Text
+                  style={{
+                    fontWeight: 'bold',
+                    color: isCompleted || isCurrent ? '#108b49' : '#A0A0A0',
+                    fontSize: 16,
+                    marginBottom: 5,
+                    textAlign: 'center',
+                  }}
+                >
+                  {idx + 1}
+                </Text>
+                {/* Circle with only leaf icon */}
+                <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+                  <View
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 24,
+                      backgroundColor: circleBg,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderWidth: isCurrent ? 3 : 0,
+                      borderColor: isCurrent ? '#108b49' : 'transparent',
+                      zIndex: 2,
+                      shadowColor: isCurrent ? '#108b49' : undefined,
+                      shadowOpacity: isCurrent ? 0.18 : 0,
+                      shadowRadius: isCurrent ? 4 : 0,
+                      shadowOffset: isCurrent ? { width: 0, height: 2 } : undefined,
+                    }}
+                  >
+                    <Ionicons
+                      name="leaf"
+                      size={24}
+                      color={leafColor}
+                      style={{ zIndex: 4 }}
+                    />
+                  </View>
+                </View>
+                {/* Label below circle */}
+                <Text
+                  style={{
+                    color: labelColor,
+                    fontWeight: labelWeight,
+                    fontSize: 14,
+                    marginTop: 12,
+                    marginBottom: 1,
+                    textAlign: 'center',
+                    minHeight: 18,
+                  }}
+                >
+                  {stage.label}
+                </Text>
+                {/* Days below label */}
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: labelColor,
+                    marginBottom: 2,
+                    textAlign: 'center',
+                  }}
+                >
+                  {stage.days} days
+                </Text>
+                {/* Description */}
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: '#aaa',
+                    textAlign: 'center',
+                    minHeight: 28,
+                  }}
+                >
+                  {stage.desc}
+                </Text>
+                {/* Current stage indicator */}
+                {isCurrent && (
+                  <View style={{ alignItems: 'center', marginTop: 4 }}>
+                    <Text
+                      style={{
+                        fontSize: 26,
+                        fontWeight: 'bold',
+                        lineHeight: 16,
+                        marginTop: 6,
+                        textAlign: 'center',
+                      }}
+                    >
+                      ▲
+                    </Text>
+                    <Text
+                      style={{
+                        color: '#000',
+                        fontWeight: 'bold',
+                        fontSize: 13,
+                        marginTop: 0,
+                        textAlign: 'center',
+                      }}
+                    >
+                      Current Stage
+                    </Text>
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+        <Text
+          style={{
+            color: '#4CAF50',
+            fontWeight: 'bold',
+            fontSize: 13,
+            marginTop: 10,
+            textAlign: 'center',
+          }}
+        >
+          Your lettuce is in the {stageLabel} period (stage {currentStage + 1} of 4)
+        </Text>
+      </View>
+    );
+  }
+  // Mobile: vertical timeline rendering
+  return (
+    <View style={styles.blockCard}>
+<Text
+  style={[
+    styles.modalTitle,
+    Platform.OS !== 'web' && { marginBottom: 24 }  // Add extra gap ONLY on mobile!
+  ]}
+>
+  Average Growth
+</Text>
+<View
+  style={{
+    flexDirection: 'column',
+    marginVertical: 8,
+    width: '98%',
+    alignSelf: 'center',
+  }}
+>
+        {stages.map((stage, idx) => {
+          const isCompleted = idx < currentStage;
+          const isCurrent = idx === currentStage;
+          const isUpcoming = idx > currentStage;
+          // Colors for status
+          const circleBg = isCompleted || isCurrent ? '#4CAF50' : '#DFDFDF';
+          const leafColor = isCompleted || isCurrent ? '#fff' : '#A0A0A0';
+          const labelColor = isCurrent ? '#108b49' : '#888';
+          const labelWeight = isCurrent ? 'bold' : 'normal';
+          // For current, add shadow/glow around the circle
+          const circleShadow = isCurrent
+            ? {
+                shadowColor: '#108b49',
+                shadowOpacity: 0.28,
+                shadowRadius: 8,
+                shadowOffset: { width: 0, height: 2 },
+                elevation: 7,
+              }
+            : {};
+          return (
+            <View key={stage.label} style={{ flexDirection: 'row', minHeight: 90 }}>
+              {/* Timeline column */}
+              <View style={{ width: 50, alignItems: 'center', position: 'relative' }}>
+                {/* Stage number above */}
+                <Text
+                  style={{
+                    fontWeight: 'bold',
+                    color: isCompleted || isCurrent ? '#108b49' : '#A0A0A0',
+                    fontSize: 15,
+                    marginBottom: 2,
+                  }}
+                >
+                  {idx + 1}
+                </Text>
+                {/* Circle with leaf */}
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: circleBg,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: isCurrent ? 3 : 0,
+                    borderColor: isCurrent ? '#108b49' : 'transparent',
+                    zIndex: 2,
+                    ...circleShadow,
+                  }}
+                >
+                  <Ionicons name="leaf" size={20} color={leafColor} />
+                </View>
+                {/* Draw vertical line below circle if not last */}
+                {idx !== stages.length - 1 && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: 58,
+                      left: 24,
+                      width: 2,
+                      height: 44,
+                      backgroundColor: '#DFDFDF',
+                      zIndex: 0,
+                    }}
+                  />
+                )}
+              </View>
+              {/* Details column */}
+              <View style={{ flex: 1, paddingLeft: 8, paddingTop: 2, paddingBottom: 10 }}>
+                {/* Label */}
+                <Text
+                  style={{
+                    color: labelColor,
+                    fontWeight: labelWeight,
+                    fontSize: 15,
+                    ...(isCurrent && { fontWeight: 'bold', color: '#108b49' }),
+                  }}
+                >
+                  {stage.label}
+                </Text>
+                {/* Days */}
+                <Text
+                  style={{
+                    fontSize: 12,
+                    color: isCurrent ? "#108b49" : "#555",
+                    marginTop: 1,
+                    ...(isCurrent && { fontWeight: 'bold' }),
+                  }}
+                >
+                  {stage.days} days
+                </Text>
+                {/* Description */}
+                <Text
+                  style={{
+                    fontSize: 11,
+                    color: isCurrent ? "#108b49" : "#888",
+                    marginTop: 1,
+                    ...(isCurrent && { fontWeight: 'bold' }),
+                  }}
+                >
+                  {stage.desc}
+                </Text>
+              </View>
+            </View>
+          );
+        })}
+      </View>
+      <Text
+        style={{
+          color: "#4CAF50",
+          fontWeight: "bold",
+          fontSize: 13,
+          marginTop: 10,
+          textAlign: 'center'
+        }}
+      >
+        Your lettuce is in the {stageLabel} period (stage {currentStage + 1} of 4)
+      </Text>
+    </View>
+  );
+}
 
 /**
  * InsightsScreen component
@@ -119,6 +459,13 @@ const generateGrowthChartData = () => {
 export default function InsightsScreen({ route, navigation }) {
   // Retrieve username from navigation params or fallback to 'Guest'
   const username = route?.params?.username || 'Guest';
+
+  // Mock lettuce health status ("healthy" or "unhealthy")
+  const [lettuceHealth, setLettuceHealth] = useState("healthy");
+
+  useEffect(() => {
+    setLettuceHealth(mockGetLettuceHealthStatus());
+  }, []);
 
   // ── Modal visibility and current value state for each insight metric ──
   const [showHumidityModal, setShowHumidityModal] = useState(false);
@@ -141,7 +488,7 @@ export default function InsightsScreen({ route, navigation }) {
   // pH modal state
   const [showPhModal, setShowPhModal] = useState(false);
   const [currentPh, setCurrentPh] = useState(null);
-  const [phRange, setPhRange] = useState([5.8, 6.3]);
+  const [phRange, setPhRange] = useState([5.5, 6.0]);
   const [waterMode, setWaterMode] = useState('Auto');
   // New pH control mode state
   const [phMode, setPhMode] = useState('Auto');
@@ -153,6 +500,8 @@ export default function InsightsScreen({ route, navigation }) {
   const [showLightModal, setShowLightModal] = useState(false);
   const [currentLight, setCurrentLight] = useState(null);
   const [lightMode, setLightMode] = useState('Auto');
+  const [isLightOn, setIsLightOn] = useState(false);
+  const [lightLevel, setLightLevel] = useState(2); // or currentLight default
   // Water modal state
   const [showWaterModal, setShowWaterModal] = useState(false);
   const [currentWaterLevel, setCurrentWaterLevel] = useState(null);
@@ -373,129 +722,172 @@ export default function InsightsScreen({ route, navigation }) {
 
                 {/* Growth Insight Card */}
                 <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                  <Text style={[styles.blockLabel, { marginLeft: 2}]}>Growth Forecast</Text>
+                  <Text style={[styles.blockLabel, { marginLeft: 2 }]}>Growth Forecast</Text>
                 </View>
-                {/* Smart Cam image mockup */}
-                <View style={[styles.blockCard, {
-                  padding: 0,
-                  overflow: 'hidden',
-                  marginBottom: 12,
-                  width: '100%',
-                  ...(Platform.OS === 'web' ? { paddingHorizontal: 40 } : {})
-                }]}>
-                  <Image
-                    source={{ uri: 'https://via.placeholder.com/300x140' }}
+                {/* Lettuce Health + Smart Cam for web */}
+                {Platform.OS === 'web' ? (
+                  <View
                     style={{
-                      width: Platform.OS === 'web' ? '95%' : '100%',
-                      height: Platform.OS === 'web' ? 200 : 140,
-                      alignSelf: Platform.OS === 'web' ? 'center' : 'stretch',
-                      borderRadius: Platform.OS === 'web' ? 8 : 0,
+                      flexDirection: 'row',
+                      gap: 12,
+                      marginBottom: 22,
+                      width: '100%',
+                      alignItems: 'stretch',
                     }}
-                    resizeMode="cover"
-                  />
-                  <View style={{
-                    position: 'absolute',
-                    bottom: 8,
-                    left: 8,
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    paddingHorizontal: 6,
-                    paddingVertical: 2,
-                    borderRadius: 4
-                  }}>
-                    <Ionicons name="camera-outline" size={12} color="#fff" />
-                    <Text style={{ color: '#fff', fontSize: 12, marginLeft: 4 }}>Smart Cam</Text>
-                  </View>
-                </View>
-                <Text style={[
-                  { fontSize: 10, fontStyle: 'italic', color: '#555', marginBottom: 12, alignSelf: 'flex-end' },
-                  Platform.OS === 'web' && { fontSize: 12 }
-                ]}>
-                  Photo taken 5 minutes ago
-                </Text>
-                {/* Growth Progress Card */}
-                <View style={styles.blockCard}>
-                  <Text style={styles.modalTitle}>Growth Progress</Text>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, marginTop: 12 }}>
-                    <Text style={styles.slotData}>0 days</Text>
-                    <View style={{
-                      flex: 1,
-                      height: 8,
-                      backgroundColor: '#e8f5e9',
-                      marginHorizontal: 8,
-                      borderRadius: 4,
-                    }}>
-                      <View style={{
-                        width: `${(5/35) * 100}%`,
-                        height: '100%',
-                        backgroundColor: '#4CAF50',
-                      }} />
+                  >
+                    {/* Left: Lettuce health status */}
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#fafafa',
+                        borderRadius: 12,
+                        padding: 18,
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        minHeight: 200,
+                        boxShadow: '0 1px 3px #eee',
+                        marginRight: 0,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Ionicons name="checkmark-circle" size={28} color="#4CAF50" style={{ marginRight: 14 }} />
+                      <Text style={{ color: "#3A3A3A", fontWeight: 'bold', fontSize: 22 }}>
+                        Lettuce looks healthy!
+                      </Text>
                     </View>
-                    <Text style={styles.slotData}>30 days</Text>
+                    {/* Right: Smart Cam image card */}
+                    <View
+                      style={{
+                        flex: 1,
+                        backgroundColor: '#fafafa',
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 200,
+                        boxShadow: '0 1px 3px #eee',
+                        position: 'relative',
+                        padding: 0,
+                      }}
+                    >
+                      <Image
+                        source={{ uri: 'https://via.placeholder.com/300x140' }}
+                        style={{
+                          width: '96%',
+                          height: 180,
+                          alignSelf: 'center',
+                          borderRadius: 8,
+                        }}
+                        resizeMode="cover"
+                      />
+                      <View style={{
+                        position: 'absolute',
+                        bottom: 20,
+                        left: 20,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 4,
+                      }}>
+                        <Ionicons name="camera-outline" size={14} color="#fff" />
+                        <Text style={{ color: '#fff', fontSize: 13, marginLeft: 5 }}>Smart Cam</Text>
+                      </View>
+                      <Text
+                        style={{
+                          position: 'absolute',
+                          bottom: 8,
+                          right: 18,
+                          fontSize: 12,
+                          fontStyle: 'italic',
+                          color: '#555',
+                          backgroundColor: 'rgba(255,255,255,0.7)',
+                          borderRadius: 3,
+                          paddingHorizontal: 7,
+                          paddingVertical: 2,
+                        }}
+                      >
+                        Photo taken 5 minutes ago
+                      </Text>
+                    </View>
                   </View>
-                  <Text style={[
-                    styles.slotData,
-                    {
-                      fontSize: Platform.OS === 'web' ? 12 : 11,
-                      fontStyle: 'italic',
-                      marginBottom: 10,
-                      alignSelf: Platform.OS === 'web' ? 'flex-end' : 'center'
-                    }
-                  ]}>
-                    Harvest in 25 days (30 May 2025).
-                  </Text>
-                </View>
+                ) : (
+                  <>
+                    {/* Lettuce Health Status (AI mock) for mobile */}
+                    <View style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      marginBottom: 8,
+                      marginLeft: 4,
+                      backgroundColor: "#f8f8f8",
+                      borderRadius: 12,
+                      paddingVertical: 10,
+                      paddingHorizontal: 16,
+                      minHeight: 36,
+                      minWidth: 220
+                    }}>
+                      {lettuceHealth === "healthy" ? (
+                        <>
+                          <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={{ marginRight: 10 }} />
+                          <Text style={{ color: "#3A3A3A", fontWeight: 'bold', fontSize: 16 }}>
+                            Lettuce looks healthy!
+                          </Text>
+                        </>
+                      ) : (
+                        <>
+                          <Ionicons name="warning" size={22} color="#e53935" style={{ marginRight: 10 }} />
+                          <Text style={{ color: "#b71c1c", fontWeight: 'bold', fontSize: 16 }}>
+                            Lettuce might need attention!
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                    {/* Smart Cam image mockup */}
+                    <View style={[styles.blockCard, {
+                      padding: 0,
+                      overflow: 'hidden',
+                      marginBottom: 12,
+                      width: '100%',
+                    }]}>
+                      <Image
+                        source={{ uri: 'https://via.placeholder.com/300x140' }}
+                        style={{
+                          width: '100%',
+                          height: 140,
+                          alignSelf: 'stretch',
+                          borderRadius: 0,
+                        }}
+                        resizeMode="cover"
+                      />
+                      <View style={{
+                        position: 'absolute',
+                        bottom: 8,
+                        left: 8,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 4
+                      }}>
+                        <Ionicons name="camera-outline" size={12} color="#fff" />
+                        <Text style={{ color: '#fff', fontSize: 12, marginLeft: 4 }}>Smart Cam</Text>
+                      </View>
+                    </View>
+                    <Text style={[
+                      { fontSize: 10, fontStyle: 'italic', color: '#555', marginBottom: 12, alignSelf: 'flex-end' },
+                      Platform.OS === 'web' && { fontSize: 12 }
+                    ]}>
+                      Photo taken 5 minutes ago
+                    </Text>
+                  </>
+                )}
 
                 {/* Average Growth Card */}
-                <View style={styles.blockCard}>
-                  <Text style={styles.modalTitle}>Average Growth</Text>
-                  {(() => {
-                    const chart = generateGrowthChartData();
-                    return (
-                      <View style={{ width: '100%', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', marginVertical: 12 }}>
-                        <LineChart
-                          data={{ labels: chart.labels, datasets: [{ data: chart.data }] }}
-                          width={Platform.OS === 'web' ? screenWidth - 100 : screenWidth - 72}
-                          height={Platform.OS === 'web' ? 360 : 180}
-                          yAxisSuffix=" cm"
-                          withInnerLines
-                          withVerticalLines={false}
-                          chartConfig={{
-                            backgroundColor: '#fff',
-                            backgroundGradientFrom: '#fff',
-                            backgroundGradientTo: '#fff',
-                            decimalPlaces: 0,
-                            color: () => '#4CAF50',
-                            labelColor: () => '#555',
-                            propsForBackgroundLines: {
-                              strokeDasharray: [4, 4],
-                            },
-                            formatYLabel: (label) => `${label} cm`,
-                            propsForLabels: Platform.OS === 'web' ? { fontSize: 14 } : {},
-                            paddingLeft: Platform.OS === 'web' ? 30 : 12,
-                            paddingRight: Platform.OS === 'web' ? 16 : 0,
-                          }}
-                          bezier
-                          style={{
-                            marginVertical: 12,
-                            borderRadius: 8,
-                            marginTop: Platform.OS === 'web' ? 44 : 12,
-                            marginLeft: Platform.OS === 'web' ? 50 : -8,
-                            marginRight: Platform.OS === 'web' ? 240 : 30
-                          }}
-                        />
-                      </View>
-                    );
-                  })()}
-                  <Text style={[
-                    styles.slotData,
-                    { fontSize: 11, fontStyle: 'italic', marginTop: 10, alignSelf: 'center' },
-                    Platform.OS === 'web' && { fontSize: 12, alignSelf: 'flex-end' }
-                  ]}>
-                    Growth is 6% ahead of schedule.
-                  </Text>
-                </View>
+                <AverageGrowthCard currentStage={2} />
                 
               </>
             ) : (
@@ -707,8 +1099,78 @@ export default function InsightsScreen({ route, navigation }) {
 
                   {/* Growth Insight Card */}
                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                    <Text style={[styles.blockLabel, { marginLeft: 2}]}>Growth Forecast</Text>
+                    <Text style={[styles.blockLabel, { marginLeft: 2 }]}>Growth Forecast</Text>
                   </View>
+                  {/* Lettuce Health + Smart Cam for web */}
+                  {Platform.OS === 'web' ? (
+                    <View
+                      style={{
+                        backgroundColor: '#fafafa',
+                        borderRadius: 12,
+                        padding: 18,
+                        marginBottom: 22,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        minHeight: 48,
+                        boxShadow: '0 1px 3px #eee',
+                        width: '100%',
+                      }}
+                    >
+                      {/* Lettuce health status (left) */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={{ marginRight: 10 }} />
+                        <Text style={{ color: "#3A3A3A", fontWeight: 'bold', fontSize: 18 }}>
+                          Lettuce looks healthy!
+                        </Text>
+                      </View>
+                      {/* Smart Cam indicator (right) */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 16 }}>
+                        <Ionicons name="camera-outline" size={15} color="#888" />
+                        <Text style={{ color: '#888', fontSize: 13, marginLeft: 4 }}>Smart Cam</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <>
+                      {/* Lettuce Health Status (AI mock) for mobile */}
+                      <View style={{
+  flexDirection: 'row',
+  alignItems: 'center',
+  marginBottom: 8,
+  // REMOVE marginLeft for flush alignment
+  backgroundColor: "#f8f8f8",
+  borderRadius: 16,
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  minHeight: 44,
+  // Stretch card to fill the available width
+  width: '100%',
+  alignSelf: 'stretch',
+  // NEW: shadow for extra visibility (optional)
+  shadowColor: "#ddd",
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.10,
+  shadowRadius: 6,
+  elevation: 2,
+}}>
+  {lettuceHealth === "healthy" ? (
+    <>
+      <Ionicons name="checkmark-circle" size={22} color="#4CAF50" style={{ marginRight: 12 }} />
+      <Text style={{ color: "#222", fontWeight: 'bold', fontSize: 16}}>
+        Lettuce looks healthy!
+      </Text>
+    </>
+  ) : (
+    <>
+      <Ionicons name="warning" size={22} color="#e53935" style={{ marginRight: 12 }} />
+      <Text style={{ color: "#b71c1c", fontWeight: 'bold', fontSize: 16 }}>
+        Lettuce might need attention!
+      </Text>
+    </>
+  )}
+</View>
+                    </>
+                  )}
                   {/* Smart Cam image mockup */}
                   <View style={[styles.blockCard, {
                     padding: 0,
@@ -748,85 +1210,8 @@ export default function InsightsScreen({ route, navigation }) {
                   ]}>
                     Photo taken 5 minutes ago
                   </Text>
-                  {/* Growth Progress Card */}
-                  <View style={styles.blockCard}>
-                    <Text style={styles.modalTitle}>Growth Progress</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, marginTop: 12 }}>
-                      <Text style={styles.slotData}>0 days</Text>
-                      <View style={{
-                        flex: 1,
-                        height: 8,
-                        backgroundColor: '#e8f5e9',
-                        marginHorizontal: 8,
-                        borderRadius: 4,
-                      }}>
-                        <View style={{
-                          width: `${(5/35) * 100}%`,
-                          height: '100%',
-                          backgroundColor: '#4CAF50',
-                        }} />
-                      </View>
-                      <Text style={styles.slotData}>30 days</Text>
-                    </View>
-                    <Text style={[
-                      styles.slotData,
-                      { fontSize: 11, fontStyle: 'italic', marginBottom: 10, alignSelf: 'center' },
-                      Platform.OS === 'web' && { fontSize: 12, alignSelf: 'flex-end' }
-                    ]}>
-                      Harvest in 25 days (30 May 2025).
-                    </Text>
-                  </View>
-
                   {/* Average Growth Card */}
-                  <View style={styles.blockCard}>
-                    <Text style={styles.modalTitle}>Average Growth</Text>
-                    {(() => {
-                      const chart = generateGrowthChartData();
-                      return (
-                        <View style={{ width: '100%', backgroundColor: '#fff', borderRadius: 8, overflow: 'hidden', marginVertical: 12 }}>
-                          <LineChart
-                            data={{ labels: chart.labels, datasets: [{ data: chart.data }] }}
-                            width={Platform.OS === 'web' ? screenWidth - 100 : screenWidth - 72}
-                            height={Platform.OS === 'web' ? 360 : 180}
-                            yAxisSuffix=" cm"
-                            withInnerLines
-                            withVerticalLines={false}
-                            chartConfig={{
-                              backgroundColor: '#fff',
-                              backgroundGradientFrom: '#fff',
-                              backgroundGradientTo: '#fff',
-                              decimalPlaces: 0,
-                              color: () => '#4CAF50',
-                              labelColor: () => '#555',
-                              propsForBackgroundLines: {
-                                strokeDasharray: [4, 4],
-                              },
-                              formatYLabel: (label) => `${label} cm`,
-                              propsForLabels: Platform.OS === 'web' ? { fontSize: 14 } : {},
-                              paddingLeft: Platform.OS === 'web' ? 30 : 12,
-                              paddingRight: Platform.OS === 'web' ? 16 : 0,
-                            }}
-                            bezier
-                            style={{
-                              marginVertical: 12,
-                              borderRadius: 8,
-                              marginTop: Platform.OS === 'web' ? 44 : 12,
-                              marginLeft: Platform.OS === 'web' ? 50 : -8,
-                              marginRight: Platform.OS === 'web' ? 240 : 30
-                            }}
-                          />
-                        </View>
-                      );
-                    })()}
-                    <Text style={[
-                      styles.slotData,
-                      { fontSize: 11, fontStyle: 'italic', marginTop: 10, alignSelf: 'center' },
-                      Platform.OS === 'web' && { fontSize: 12, alignSelf: 'flex-end' }
-                    ]}>
-                      Growth is 6% ahead of schedule.
-                    </Text>
-                  </View>
-                  
+                  <AverageGrowthCard currentStage={2} />
                 </>
               ) : (
                 <>
@@ -1023,7 +1408,9 @@ export default function InsightsScreen({ route, navigation }) {
             {/* Brightness label */}
             <View style={{ flexDirection: 'row', alignItems: 'flex-start', position: 'relative', marginBottom: 12 }}>
               <Text style={{ fontSize: 18, color: '#333', marginLeft: 6 }}>
-                Current Brightness: <Text style={{ fontWeight: 'bold' }}>{currentLight}</Text> lux
+                Current Brightness: <Text style={{ fontWeight: 'bold' }}>
+                  {lightMode === 'Manual' ? lightLevel : currentLight}
+                </Text> lux
               </Text>
               <View style={{ marginLeft: 6 }}>
                 <TouchableOpacity
@@ -1113,6 +1500,73 @@ export default function InsightsScreen({ route, navigation }) {
                 </TouchableOpacity>
               ))}
             </View>
+            {/* Manual Light Controls */}
+            {lightMode === 'Manual' && (
+              <View style={{ marginTop: 16, alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 12 }}>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: isLightOn ? '#4CAF50' : '#e0e0e0',
+                      paddingVertical: 8,
+                      paddingHorizontal: 24,
+                      borderRadius: 8,
+                      marginRight: 10,
+                    }}
+                    onPress={() => setIsLightOn(true)}
+                  >
+                    <Text style={{ color: isLightOn ? '#fff' : '#555', fontWeight: 'bold' }}>ON</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: !isLightOn ? '#4CAF50' : '#e0e0e0',
+                      paddingVertical: 8,
+                      paddingHorizontal: 24,
+                      borderRadius: 8,
+                    }}
+                    onPress={() => setIsLightOn(false)}
+                  >
+                    <Text style={{ color: !isLightOn ? '#fff' : '#555', fontWeight: 'bold' }}>OFF</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#e0e0e0',
+                      borderRadius: 8,
+                      padding: 8,
+                      marginRight: 12,
+                      opacity: lightLevel <= 0 ? 0.5 : 1,
+                    }}
+                    disabled={lightLevel <= 0}
+                    onPress={() => setLightLevel(lvl => Math.max(lvl - 1, 0))}
+                  >
+                    <Ionicons name="remove" size={24} color="#108b49" />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 18, fontWeight: 'bold', marginHorizontal: 10 }}>
+                    {lightLevel}
+                  </Text>
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: '#e0e0e0',
+                      borderRadius: 8,
+                      padding: 8,
+                      marginLeft: 12,
+                      opacity: lightLevel >= 10 ? 0.5 : 1,
+                    }}
+                    disabled={lightLevel >= 10}
+                    onPress={() => setLightLevel(lvl => Math.min(lvl + 1, 10))}
+                  >
+                    <Ionicons name="add" size={24} color="#108b49" />
+                  </TouchableOpacity>
+                  <Text style={{ marginLeft: 12, fontSize: 16, color: '#333' }}>
+                    Light Level
+                  </Text>
+                </View>
+                <Text style={{ color: isLightOn ? "#4CAF50" : "#888", marginTop: 8 }}>
+                  Status: {isLightOn ? "ON" : "OFF"}
+                </Text>
+              </View>
+            )}
             <View style={{ alignSelf: 'center', marginTop: 14 }}>
               <Text style={{
                 fontSize: 13,
@@ -1213,9 +1667,9 @@ export default function InsightsScreen({ route, navigation }) {
               style={styles.actionButton}
               onPress={() => {
                 if (Platform.OS === 'web') {
-                  alert('Pumping nutrients now');
+                  alert('Dispensing nutrients... Will stop after 5 seconds.');
                 } else {
-                  Alert.alert('Notice', 'Pumping nutrients now');
+                  Alert.alert('Notice', 'Dispensing nutrients... Will stop after 5 seconds.');
                 }
               }}
             >
@@ -1283,8 +1737,8 @@ export default function InsightsScreen({ route, navigation }) {
                 }}>
                   <Text style={{ fontSize: 12, color: '#333', lineHeight: 16 }}>
                     {Platform.OS === 'web'
-                      ? 'Ideal pH for lettuce growth is between 5.8–6.3. Your current pH is within this optimal range.'
-                      : 'Ideal pH for lettuce growth is between 5.8–6.3.\nYour current pH is within this optimal range.'}
+                      ? 'Ideal pH for lettuce growth is between 5.5–6.0. Your current pH is within this optimal range.'
+                      : 'Ideal pH for lettuce growth is between 5.5–6.0.\nYour current pH is within this optimal range.'}
                   </Text>
                 </View>
               )}
@@ -1315,37 +1769,12 @@ export default function InsightsScreen({ route, navigation }) {
                 />
               );
             })()}
-            {/* pH label */}
-            <Text style={styles.modalSectionTitle}>pH Mode</Text>
             <Text style={[
-              { color: '#333', marginTop: 8, marginBottom: 6 },
+              { color: '#333', marginTop: 4, marginBottom: 6 },
               Platform.OS === 'web' ? { fontSize: 16 } : { fontSize: 14 }
             ]}>
-              Current: <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>{phMode}</Text>
+              Ideal pH for lettuce growth is between <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>5.5–6.0</Text>.
             </Text>
-            <View style={[styles.segmentContainer, { marginTop: 16 }]}>
-              {['Auto', 'Schedule', 'Manual'].map((mode, idx, arr) => (
-                <TouchableOpacity
-                  key={mode}
-                  style={[
-                    styles.segmentButton,
-                    idx === 0 && styles.segmentFirst,
-                    idx === arr.length - 1 && styles.segmentLast,
-                    phMode === mode && styles.segmentButtonActive
-                  ]}
-                  onPress={() => setPhMode(mode)}
-                >
-                  <Text
-                    style={[
-                      styles.segmentButtonText,
-                      phMode === mode && styles.segmentButtonTextActive
-                    ]}
-                  >
-                    {mode}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
             <View style={{ alignSelf: 'center', marginTop: 14 }}>
               <Text style={{
                 fontSize: 13,
