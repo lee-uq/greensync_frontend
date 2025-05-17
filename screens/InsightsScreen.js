@@ -496,6 +496,8 @@ export default function InsightsScreen({ route, navigation }) {
   const [showTDSModal, setShowTDSModal] = useState(false);
   const [currentTDS, setCurrentTDS] = useState(null);
   const [TDSRange, setTDSRange] = useState([0, 2000]);
+  // TDS Mode state
+  const [TDSMode, setTDSMode] = useState('Auto');
   // Light modal state
   const [showLightModal, setShowLightModal] = useState(false);
   const [currentLight, setCurrentLight] = useState(null);
@@ -1325,55 +1327,44 @@ export default function InsightsScreen({ route, navigation }) {
             })()}
 
             {/* Water Volume */}
-            <Text style={styles.modalSectionTitle}>Target Water Volume</Text>
+            <Text style={styles.modalSectionTitle}>Water Mode</Text>
             <Text style={[
-              { color: '#333', marginTop: 4, marginBottom: 6 },
+              { color: '#333', marginTop: 8, marginBottom: 6 },
               Platform.OS === 'web' ? { fontSize: 16 } : { fontSize: 14 }
             ]}>
-              Current Volume: <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>
-                {humidityPref} {humidityPref === 'Low' ? '(≈5.0 L)' : humidityPref === 'Medium' ? '(≈6.5 L)' : '(≈8.0 L)'}
-              </Text>
+              Current: <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>{waterMode}</Text>
             </Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 15, marginBottom: 10 }}>
-              <Text
-                style={{
-                  color: humidityPref === 'Low' ? '#4CAF50' : '#A0A0A0',
-                  fontWeight: humidityPref === 'Low' ? 'bold' : 'normal'
-                }}
-              >
-                Low
-              </Text>
-              <Text
-                style={{
-                  color: humidityPref === 'Medium' ? '#4CAF50' : '#A0A0A0',
-                  fontWeight: humidityPref === 'Medium' ? 'bold' : 'normal'
-                }}
-              >
-                Medium
-              </Text>
-              <Text
-                style={{
-                  color: humidityPref === 'High' ? '#4CAF50' : '#A0A0A0',
-                  fontWeight: humidityPref === 'High' ? 'bold' : 'normal'
-                }}
-              >
-                High
-              </Text>
+            <View style={[styles.segmentContainer, { marginTop: 12 }]}>
+              {['Auto', 'Manual'].map((mode, idx, arr) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={[
+                    styles.segmentButton,
+                    idx === 0 && styles.segmentFirst,
+                    idx === arr.length - 1 && styles.segmentLast,
+                    waterMode === mode && styles.segmentButtonActive
+                  ]}
+                  onPress={() => setWaterMode(mode)}
+                >
+                  <Text style={[styles.segmentButtonText, waterMode === mode && styles.segmentButtonTextActive]}>
+                    {mode}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-            <Slider
-              style={{ width: '100%', height: 40 }}
-              minimumValue={0}
-              maximumValue={2}
-              step={1}
-              minimumTrackTintColor="#4CAF50"
-              maximumTrackTintColor="#E0E0E0"
-              thumbTintColor="#4CAF50"
-              value={humidityPref === 'Low' ? 0 : humidityPref === 'Medium' ? 1 : 2}
-              onValueChange={(value) => {
-                const pref = value === 0 ? 'Low' : value === 1 ? 'Medium' : 'High';
-                setHumidityPref(pref);
-              }}
-            />
+<TouchableOpacity
+  style={styles.actionButton}
+  onPress={() => {
+    if (Platform.OS === 'web') {
+      alert('Dispensing water... Will stop after 5 seconds.');
+    } else {
+      Alert.alert('Notice', 'Dispensing water... Will stop after 5 seconds.');
+    }
+  }}
+>
+  <Text style={styles.actionButtonText}>Dispense Water</Text>
+</TouchableOpacity>
+
 
             <View style={{ alignSelf: 'center', marginTop: 14 }}>
               <Text style={{
@@ -1483,7 +1474,7 @@ export default function InsightsScreen({ route, navigation }) {
               Current: <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>{lightMode}</Text>
             </Text>
             <View style={[styles.segmentContainer, { marginTop:12 }]}>
-              {['Auto','Schedule','Manual'].map((mode, idx, arr) => (
+              {['Auto','Manual'].map((mode, idx, arr) => (
                 <TouchableOpacity
                   key={mode}
                   style={[
@@ -1662,6 +1653,32 @@ export default function InsightsScreen({ route, navigation }) {
                 />
               );
             })()}
+            {/* TDS Mode Segmented Control */}
+            <Text style={styles.modalSectionTitle}>TDS Mode</Text>
+            <Text style={[
+              { color: '#333', marginTop: 8, marginBottom: 6 },
+              Platform.OS === 'web' ? { fontSize: 16 } : { fontSize: 14 }
+            ]}>
+              Current: <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>{TDSMode}</Text>
+            </Text>
+            <View style={[styles.segmentContainer, { marginTop: 12 }]}>
+              {['Auto', 'Manual'].map((mode, idx, arr) => (
+                <TouchableOpacity
+                  key={mode}
+                  style={[
+                    styles.segmentButton,
+                    idx === 0 && styles.segmentFirst,
+                    idx === arr.length - 1 && styles.segmentLast,
+                    TDSMode === mode && styles.segmentButtonActive
+                  ]}
+                  onPress={() => setTDSMode(mode)}
+                >
+                  <Text style={[styles.segmentButtonText, TDSMode === mode && styles.segmentButtonTextActive]}>
+                    {mode}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
             {/* Dispense Nutrients Button */}
             <TouchableOpacity
               style={styles.actionButton}
@@ -1769,12 +1786,6 @@ export default function InsightsScreen({ route, navigation }) {
                 />
               );
             })()}
-            <Text style={[
-              { color: '#333', marginTop: 4, marginBottom: 6 },
-              Platform.OS === 'web' ? { fontSize: 16 } : { fontSize: 14 }
-            ]}>
-              Ideal pH for lettuce growth is between <Text style={{ fontWeight: 'bold', color: '#4CAF50' }}>5.5–6.0</Text>.
-            </Text>
             <View style={{ alignSelf: 'center', marginTop: 14 }}>
               <Text style={{
                 fontSize: 13,
